@@ -8,18 +8,81 @@
 </head>
 <body>
   <div class="box">
-  <h1>Tech Points Platform</h1>
+    <h1>Tech Points Platform</h1>
+    <p id="status" class="muted">Loading...</p>
 
-  <p id="status">Loading...</p>
-  <button id="btn">Test Button</button>
+    <div class="card">
+      <div><b>Name:</b> <span id="displayName">-</span></div>
+      <div><b>UserId:</b> <span id="userId">-</span></div>
+    </div>
 
-  <div style="margin-top:12px;">
-    <div><b>Name:</b> <span id="displayName">-</span></div>
-    <div><b>UserId:</b> <span id="userId">-</span></div>
+    <div class="tabs">
+      <button class="tab" data-tab="register">สมัครสมาชิก</button>
+      <button class="tab" data-tab="install">ส่งงานติดตั้ง</button>
+      <button class="tab" data-tab="points">คะแนนของฉัน</button>
+      <button class="tab" data-tab="redeem">ขอแลกแต้ม</button>
+    </div>
+
+    <!-- REGISTER -->
+    <section class="panel" id="panel-register">
+      <h3>สมัครสมาชิก (Members)</h3>
+      <div class="grid">
+        <label>รหัสช่าง (no)<input id="m_no" /></label>
+        <label>ชื่อจริง<input id="m_name" /></label>
+        <label>นามสกุล<input id="m_lastName" /></label>
+        <label>เบอร์โทร<input id="m_phone" /></label>
+        <label>จังหวัด<input id="m_province" /></label>
+
+        <label>ชื่อธนาคาร<input id="m_bankName" /></label>
+        <label>เลขบัญชี<input id="m_bankAccountNo" /></label>
+        <label>ชื่อบัญชี<input id="m_bankAccountName" /></label>
+        <label>Email<input id="m_email" /></label>
+      </div>
+      <button id="btnRegister">บันทึกสมัครสมาชิก</button>
+      <pre id="outRegister" class="out"></pre>
+    </section>
+
+    <!-- INSTALL -->
+    <section class="panel" id="panel-install" style="display:none">
+      <h3>ส่งงานติดตั้ง (Install)</h3>
+      <div class="grid">
+        <label>Serial Number<input id="i_serial" /></label>
+        <label>serialNumberPhoto (URL)<input id="i_serialPhoto" placeholder="ลิงก์รูป (ถ้ามี)" /></label>
+        <label>installPhoto (URL)<input id="i_installPhoto" placeholder="ลิงก์รูป (ถ้ามี)" /></label>
+      </div>
+      <button id="btnInstall">ส่งงานติดตั้ง</button>
+      <pre id="outInstall" class="out"></pre>
+    </section>
+
+    <!-- POINTS -->
+    <section class="panel" id="panel-points" style="display:none">
+      <h3>คะแนนของฉัน</h3>
+      <button id="btnPoints">โหลดคะแนน</button>
+      <div class="card">
+        <div><b>Balance:</b> <span id="balance">-</span></div>
+      </div>
+      <pre id="outPoints" class="out"></pre>
+    </section>
+
+    <!-- REDEEM -->
+    <section class="panel" id="panel-redeem" style="display:none">
+      <h3>ขอแลกแต้ม (Redeems)</h3>
+      <div class="grid">
+        <label>แต้มที่ต้องการแลก<input id="r_points" type="number" min="1" /></label>
+      </div>
+      <button id="btnRedeem">ยืนยันขอแลกแต้ม</button>
+      <pre id="outRedeem" class="out"></pre>
+    </section>
+
   </div>
-</div>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <!-- แยกไฟล์แบบเป็นระเบียบ -->
+  <script src="config.js"></script>
+  <script src="api.js"></script>
+  <script src="liff.js"></script>
+  <script src="ui.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
