@@ -43,3 +43,36 @@ async function onRegister(profile) {
     UI.renderOut("outRegister", { ok:false, error: e.message || String(e) });
   }
 }
+
+// ===== MAIN BOOTSTRAP =====
+(async function main() {
+  try {
+    UI.bindTabs();
+
+    // เปิดแท็บจาก URL (?tab=...)
+    const tab = UI.getTabFromUrl();
+    UI.setActiveTab(tab);
+
+    // init LIFF (จะ login / ดึง profile)
+    UI.setStatus("Initializing LIFF...");
+    const profile = await LiffAuth.init();
+
+    // ถ้ากำลัง redirect ไป login -> profile จะเป็น null
+    if (!profile) return;
+
+    UI.renderProfile(profile);
+    UI.setStatus("Ready ✅");
+
+    // bind ปุ่มต่าง ๆ
+    UI.$("btnRegister")?.addEventListener("click", () => onRegister(profile));
+
+    // (ถ้าคุณมีฟังก์ชันอื่น เช่น onInstall/onPoints/onRedeem ให้ bind เพิ่มตรงนี้)
+    // UI.$("btnInstall")?.addEventListener("click", () => onInstall(profile));
+    // UI.$("btnPoints")?.addEventListener("click", () => onPoints(profile));
+    // UI.$("btnRedeem")?.addEventListener("click", () => onRedeem(profile));
+
+  } catch (e) {
+    console.error(e);
+    UI.setStatus("ERROR: " + (e?.message || String(e)));
+  }
+})();
