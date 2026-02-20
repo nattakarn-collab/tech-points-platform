@@ -14,11 +14,21 @@ async function liffInit(){
   const profile = await liff.getProfile();
   window.__LIFF_PROFILE__ = profile;
 
+    // ✅ เพิ่ม: ดึง email จาก ID Token (ต้องเปิด scope: openid + email)
+  const decoded = liff.getDecodedIDToken();
+  window.__LIFF_EMAIL__ = (decoded && decoded.email) ? String(decoded.email) : "";
+  
   const uidEl = document.getElementById("userId");
   if (uidEl) uidEl.textContent = profile.userId;
 
   const dnEl = document.getElementById("displayName");
   if (dnEl) dnEl.textContent = profile.displayName || "-";
+
+    // ✅ ถ้าหน้าไหนมีช่อง email_2 ให้เติมให้อัตโนมัติ
+  const emailEl = document.getElementById("email_2");
+  if (emailEl && window.__LIFF_EMAIL__ && !emailEl.value) {
+    emailEl.value = window.__LIFF_EMAIL__;
+  }
 }
 
 // ===== API POST =====
