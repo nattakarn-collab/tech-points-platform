@@ -1,19 +1,16 @@
-// api.js
 window.Api = (function () {
   async function post(payload) {
     const url = window.APP_CONFIG?.APPS_SCRIPT_URL;
-    if (!url || String(url).includes("PUT_YOUR")) {
-      throw new Error("APPS_SCRIPT_URL ยังไม่ถูกตั้งค่าใน config.js");
-    }
+    if (!url) throw new Error("APPS_SCRIPT_URL is missing in config.js");
 
-    const res = await fetch(url, {
+    await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify(payload),
     });
 
-    return await res.json();
+    return { ok: true, message: "SUBMITTED ✅ (check Google Sheet)" };
   }
-
   return { post };
 })();
