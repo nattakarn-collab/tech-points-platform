@@ -1,1 +1,63 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Install</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <img src="Logo-Macaw-สีดำ1.png" alt="logo" onerror="this.style.display='none'">
+    <div>
+      <div class="title">ลงติดตั้ง</div>
+      <div class="badge">Install</div>
+    </div>
+  </div>
 
+  <div class="card">
+    <div class="mini">UserId: <span id="userId">-</span></div>
+
+    <label>Dealer</label>
+    <input id="dealer" placeholder="เช่น D1">
+
+    <label>BTU</label>
+    <select id="btu">
+      <option value="">เลือก</option>
+      <option>09-12</option>
+      <option>18-24</option>
+    </select>
+
+    <label>Serial Number</label>
+    <input id="serialNumber" placeholder="SN...">
+
+    <div class="hr"></div>
+    <button class="btn primary" onclick="submitInstall()">บันทึก</button>
+    <div style="height:10px"></div>
+    <button class="btn" onclick="location.href='index.html'">กลับเมนู</button>
+    <div id="toast" class="mini"></div>
+  </div>
+</div>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="liff-starter.js"></script>
+<script>
+async function submitInstall(){
+  const p = window.__LIFF_PROFILE__;
+  if (!p) return toast("ยังไม่พร้อมใช้งาน LIFF", false);
+
+  const payload = {
+    userId: p.userId,
+    dealer: document.getElementById("dealer").value.trim(),
+    btu: document.getElementById("btu").value,
+    serialNumber: document.getElementById("serialNumber").value.trim()
+  };
+
+  const r = await apiPost("install", "create", payload);
+  if (r.ok) toast("บันทึกสำเร็จ ✅ (row " + r.row + ")", true);
+  else toast("บันทึกไม่สำเร็จ: " + (r.error || "unknown"), false);
+}
+</script>
+</body>
+</html>
