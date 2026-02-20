@@ -31,6 +31,9 @@
     <label>จังหวัด</label>
     <input id="province" placeholder="เช่น กรุงเทพฯ">
 
+    <label>Email (สำหรับ eMail_2)</label>
+    <input id="email_2" placeholder="name@email.com" inputmode="email">
+
     <div class="hr"></div>
     <button class="btn primary" onclick="submitRegister()">บันทึก</button>
     <div style="height:10px"></div>
@@ -46,6 +49,9 @@ async function submitRegister(){
   const p = window.__LIFF_PROFILE__;
   if (!p) return toast("ยังไม่พร้อมใช้งาน LIFF", false);
 
+  const email2El = document.getElementById("email_2");
+  const email2 = (email2El ? email2El.value.trim() : "") || (window.__LIFF_EMAIL__ || "");
+
   const payload = {
     userId: p.userId,
     displayName: p.displayName || "",
@@ -54,6 +60,9 @@ async function submitRegister(){
     lastName: document.getElementById("lastName").value.trim(),
     phone: document.getElementById("phone").value.trim(),
     province: document.getElementById("province").value.trim(),
+
+    // ✅ เพิ่มบรรทัดนี้: จะไปลงชีทคอลัมน์หัวข้อ "eMail_2"
+    eMail_2: email2
   };
 
   const r = await apiPost("members", "upsert", payload);
