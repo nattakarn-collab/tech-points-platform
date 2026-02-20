@@ -1,84 +1,226 @@
-async function onRegister(profile) {
-  try {
-    // USER-REQUIRE (บังคับกรอก) -> ลง phone/birthday/eMail (ไม่มี _2)
-    const no = UI.requireValue("m_no", "รหัสช่าง (no)");
-    const name = UI.requireValue("m_name", "ชื่อจริง");
-    const lastName = UI.requireValue("m_lastName", "นามสกุล");
-    const phone = UI.requireValue("m_phone", "เบอร์โทร");
-    const birthday = UI.requireValue("m_birthday", "วันเกิด");
-    const province = UI.requireValue("m_province", "จังหวัด");
+// docs/app.js
+(function () {
+  "use strict";
 
-    const bankName = UI.requireValue("m_bankName", "ชื่อธนาคาร");
-    const bankAccountNo = UI.requireValue("m_bankAccountNo", "เลขบัญชี");
-    const bankAccountName = UI.requireValue("m_bankAccountName", "ชื่อบัญชี");
-    const eMail = UI.requireValue("m_email", "Email");
+  // -------------------------
+  // Helpers
+  // -------------------------
+  const $ = (sel) => document.querySelector(sel);
+  const getQuery = (key) => new URLSearchParams(location.search).get(key);
 
-    const payload = {
-      action: "register",
-
-      // LINE (from LIFF)
-      userId: profile.userId,
-      displayName: profile.displayName || "",
-      pictureUrl: profile.pictureUrl || "",
-
-      // LINE extra fields (ถ้ามีแหล่งส่งมา) -> *_2
-      phone_2: profile.phone_2 || "",
-      birthday_2: profile.birthday_2 || "",
-      eMail_2: profile.eMail_2 || "",
-
-      // USER-required -> ไม่มี _2
-      no, name, lastName,
-      phone, birthday, eMail,
-      province,
-      bankName, bankAccountNo, bankAccountName,
-
-      // user-non-require
-      bookBankPhoto: UI.$("m_bookBankPhoto") ? UI.$("m_bookBankPhoto").value.trim() : "",
-      idPhoto: UI.$("m_idPhoto") ? UI.$("m_idPhoto").value.trim() : "",
-    };
-
-    const out = await Api.post(payload);
-    UI.renderOut("outRegister", out);
-  } catch (e) {
-    UI.renderOut("outRegister", { ok:false, error: e.message || String(e) });
+  function setText(sel, text) {
+    const el = $(sel);
+    if (el) el.textContent = text ?? "";
   }
-}
 
-// ===== MAIN BOOTSTRAP =====
-(async function main() {
-  try {
-    UI.bindTabs();
+  function setHtml(sel, html) {
+    const el = $(sel);
+    if (el) el.innerHTML = html ?? "";
+  }
 
-    const tab = UI.getTabFromUrl();
-    UI.setActiveTab(tab);
+  function val(id) {
+    const el = document.getElementById(id);
+    return el ? String(el.value || "").trim() : "";
+  }
 
-    const u = new URL(location.href);
-    const noliff = u.searchParams.get("noliff") === "1";
+  function requireVal(id, label) {
+    const v = val(id);
+    if (!v) throw new Error(`กรุณากรอก ${label}`);
+    return v;
+  }
 
-    let profile = null;
-
-    if (noliff) {
-      // โหมดทดสอบบนเว็บ: ไม่เรียก LIFF
-      UI.setStatus("NO-LIFF mode (test) ✅");
-      profile = { userId: "U_WEB_TEST", displayName: "Web Test", pictureUrl: "" };
-      UI.renderProfile(profile);
+  function showReady(isReady, note = "") {
+    // ถ้าหน้าคุณมี element สถานะ เช่น #statusText ก็จะแสดงให้
+    // (ถ้าไม่มี ก็ไม่เป็นไร)
+    if (isReady) {
+      setText("#statusText", note ? `Ready ✅ (${note})` : "Ready ✅");
     } else {
-      UI.setStatus("Initializing LIFF...");
-      profile = await LiffAuth.init();
-      if (!profile) return;
-      UI.renderProfile(profile);
-      UI.setStatus("Ready ✅");
+      setText("#statusText", note ? `Not Ready ❌ (${note})` : "Not Ready ❌");
+    }
+  }
+
+  function showResult(obj) {
+    // ถ้าหน้าคุณมีพื้นที่แสดงผล เช่น #resultBox / #resultJson
+    // (ถ้าไม่มี ก็ไม่เป็นไร)
+    const pretty = JSON.stringify(obj, null, 2);
+    const el = $("#resultBox") || $("#resultJson");
+    if (el) el.textContent = pretty;
+    console.log("API response:", obj);
+  }
+
+  // -------------------------
+  // User Context (LIFF/WEB)
+  // -------------------------
+  const state = {
+    noliff: getQuery("noliff") === "1",
+    tab: getQuery("tab") || (window.APP_CONFIG?.DEFAULT_TAB || "register"),
+    user: {
+      displayName: "-",
+      userId: "-",
+      pictureUrl: "",
+      mode: "UNKNOWN",
+    },
+  };
+
+  function renderUserCard() {
+    // ปรับ selector ตามที่หน้าเว็บคุณใช้
+    // (ในภาพมี "Name:" และ "UserId:")
+    setText("#userName", state.user.displayName);
+    setText("#userId", state.user.userId);
+
+    // ถ้ามี element โชว์โหมด
+    const note = state.noliff ? "NO-LIFF mode (test)" : "LIFF mode";
+    setText("#modeText", note);
+  }
+
+  async function initUser() {
+    // NO-LIFF mode
+    if (state.noliff) {
+      state.user = {
+        displayName: "Web Test",
+        userId: "U_WEB_TEST",
+        pictureUrl: "",
+        mode: "NO_LIFF",
+      };
+      showReady(true, "NO-LIFF");
+      renderUserCard();
+      return;
     }
 
-    UI.$("btnRegister")?.addEventListener("click", () => onRegister(profile));
+    // LIFF mode (ถ้ามี liff)
+    try {
+      if (!window.liff) {
+        // ถ้าไม่มี liff.js โหลดมา
+        state.user = { displayName: "-", userId: "-", pictureUrl: "", mode: "NO_LIFF_FALLBACK" };
+        showReady(true, "Web (no LIFF SDK)");
+        renderUserCard();
+        return;
+      }
 
-    // ถ้าคุณทำ onInstall/onPoints/onRedeem แล้วค่อย bind เพิ่ม
-    // UI.$("btnInstall")?.addEventListener("click", () => onInstall(profile));
-    // UI.$("btnPoints")?.addEventListener("click", () => onPoints(profile));
-    // UI.$("btnRedeem")?.addEventListener("click", () => onRedeem(profile));
+      const liffId = window.APP_CONFIG?.LIFF_ID;
+      if (!liffId) throw new Error("LIFF_ID missing in config.js");
 
-  } catch (e) {
-    console.error(e);
-    UI.setStatus("ERROR: " + (e?.message || String(e)));
+      await window.liff.init({ liffId });
+
+      if (!window.liff.isLoggedIn()) {
+        window.liff.login();
+        return; // จะ redirect กลับมา
+      }
+
+      const profile = await window.liff.getProfile();
+      state.user = {
+        displayName: profile.displayName || "-",
+        userId: profile.userId || "-",
+        pictureUrl: profile.pictureUrl || "",
+        mode: "LIFF",
+      };
+
+      showReady(true, "LIFF");
+      renderUserCard();
+    } catch (err) {
+      console.error("LIFF init error:", err);
+      showReady(false, "LIFF error");
+      // ยังให้ใช้แบบเว็บได้ แต่ userId จะเป็น "-"
+      state.user = { displayName: "-", userId: "-", pictureUrl: "", mode: "LIFF_ERROR" };
+      renderUserCard();
+    }
   }
+
+  // -------------------------
+  // Actions
+  // -------------------------
+  async function submitRegister() {
+    // ✅ จุดสำคัญ: ส่ง userId (ตัว I ใหญ่) ให้ตรงกับ Apps Script
+    const payload = {
+      action: "register",
+      userId: state.user.userId, // ✅ ต้องชื่อ userId
+
+      // form fields
+      no: requireVal("m_no", "รหัสช่าง (no)"),
+      name: requireVal("m_name", "ชื่อจริง"),
+      lastName: requireVal("m_lastName", "นามสกุล"),
+      phone: requireVal("m_phone", "เบอร์โทร"),
+      birthday: requireVal("m_birthday", "วันเกิด"),
+      province: requireVal("m_province", "จังหวัด"),
+      bankName: requireVal("m_bankName", "ชื่อธนาคาร"),
+      bankAccountNo: requireVal("m_bankAccountNo", "เลขบัญชี"),
+      bankAccountName: requireVal("m_bankAccountName", "ชื่อบัญชี"),
+      eMail: requireVal("m_email", "Email"),
+
+      // optional URL fields (ถ้าหน้าคุณมี)
+      bookBankPhoto: val("m_bookBankPhoto") || "",
+      idPhoto: val("m_idPhoto") || "",
+    };
+
+    // กันกรณี LIFF error แล้ว userId เป็น "-"
+    if (!payload.userId || payload.userId === "-") {
+      // ถ้าเป็นโหมดทดสอบให้ใส่ค่าทดสอบแทน
+      if (state.noliff) payload.userId = "U_WEB_TEST";
+      else throw new Error("ไม่พบ UserId จาก LIFF (ลองเปิดด้วย ?noliff=1 เพื่อทดสอบเว็บก่อน)");
+    }
+
+    // ยิงเข้า Apps Script
+    const resp = await window.Api.post(payload);
+    showResult(resp);
+
+    if (!resp || resp.ok !== true) {
+      throw new Error(resp?.error || "ส่งข้อมูลไม่สำเร็จ");
+    }
+
+    return resp;
+  }
+
+  // -------------------------
+  // Wire up UI
+  // -------------------------
+  function bindEvents() {
+    // ปุ่มบันทึกสมัครสมาชิก
+    // ใส่ id ให้ปุ่มใน index.html เป็น id="btnRegister"
+    const btn = $("#btnRegister");
+    if (btn) {
+      btn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        try {
+          btn.disabled = true;
+          showResult({ ok: false, message: "Submitting..." });
+
+          const resp = await submitRegister();
+          showResult({ ok: true, message: "บันทึกสำเร็จ ✅", resp });
+
+          // ถ้าต้องการ reset ฟอร์มหลังบันทึก
+          const form = $("#formRegister");
+          if (form && typeof form.reset === "function") form.reset();
+        } catch (err) {
+          console.error(err);
+          showResult({ ok: false, error: String(err.message || err) });
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    }
+  }
+
+  function ensureApiLoaded() {
+    if (!window.Api || typeof window.Api.post !== "function") {
+      console.error("Api.post not found. Check docs/api.js loaded before app.js");
+      showReady(false, "Api missing");
+      showResult({ ok: false, error: "Api.post not found (check script order)" });
+      return false;
+    }
+    return true;
+  }
+
+  async function boot() {
+    // แสดง tab (ถ้าหน้าคุณมีระบบ tab ก็อาจไม่ต้องใช้)
+    // อย่างน้อยเก็บ state.tab ไว้ก่อน
+    // console.log("TAB:", state.tab);
+
+    if (!ensureApiLoaded()) return;
+
+    await initUser();
+    bindEvents();
+  }
+
+  // start
+  document.addEventListener("DOMContentLoaded", boot);
 })();
