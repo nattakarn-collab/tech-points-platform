@@ -1,1 +1,41 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tech Points Platform</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">
+      <!-- ถ้ายังไม่มีโลโก้ ให้ลบ img หรืออัปโหลดไฟล์ให้ชื่อเดียวกัน -->
+      <img src="Logo-Macaw-สีดำ1.png" alt="logo" onerror="this.style.display='none'">
+      <div>
+        <div class="title">Tech Points Platform</div>
+        <div class="badge">LIFF Menu</div>
+      </div>
+    </div>
 
+    <div class="card">
+      <div class="mini">UserId: <span id="userId">-</span></div>
+      <div class="mini">Name: <span id="displayName">-</span></div>
+      <div class="hr"></div>
+
+      <button class="btn primary" onclick="location.href='register.html'">1) ลงทะเบียน (Members)</button>
+      <div style="height:10px"></div>
+      <button class="btn" onclick="location.href='install.html'">2) ลงติดตั้ง (Install)</button>
+      <div style="height:10px"></div>
+      <button class="btn" onclick="location.href='points.html'">3) เช็คแต้ม (Points)</button>
+      <div style="height:10px"></div>
+      <button class="btn danger" onclick="location.href='redeem.html'">4) แลกแต้ม (Redeems)</button>
+
+      <div id="toast" class="mini"></div>
+    </div>
+  </div>
+
+  <!-- สำคัญ: โหลด SDK ก่อน -->
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="liff-starter.js"></script>
+</body>
+</html>
