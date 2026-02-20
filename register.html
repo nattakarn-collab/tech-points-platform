@@ -1,1 +1,65 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Register</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <img src="Logo-Macaw-สีดำ1.png" alt="logo" onerror="this.style.display='none'">
+    <div>
+      <div class="title">ลงทะเบียนช่าง</div>
+      <div class="badge">Members</div>
+    </div>
+  </div>
 
+  <div class="card">
+    <div class="mini">UserId: <span id="userId">-</span></div>
+
+    <label>ชื่อ</label>
+    <input id="name" placeholder="ชื่อจริง">
+
+    <label>นามสกุล</label>
+    <input id="lastName" placeholder="นามสกุล">
+
+    <label>เบอร์โทร</label>
+    <input id="phone" placeholder="08xxxxxxxx" inputmode="tel">
+
+    <label>จังหวัด</label>
+    <input id="province" placeholder="เช่น กรุงเทพฯ">
+
+    <div class="hr"></div>
+    <button class="btn primary" onclick="submitRegister()">บันทึก</button>
+    <div style="height:10px"></div>
+    <button class="btn" onclick="location.href='index.html'">กลับเมนู</button>
+    <div id="toast" class="mini"></div>
+  </div>
+</div>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="liff-starter.js"></script>
+<script>
+async function submitRegister(){
+  const p = window.__LIFF_PROFILE__;
+  if (!p) return toast("ยังไม่พร้อมใช้งาน LIFF", false);
+
+  const payload = {
+    userId: p.userId,
+    displayName: p.displayName || "",
+    pictureUrl: p.pictureUrl || "",
+    name: document.getElementById("name").value.trim(),
+    lastName: document.getElementById("lastName").value.trim(),
+    phone: document.getElementById("phone").value.trim(),
+    province: document.getElementById("province").value.trim(),
+  };
+
+  const r = await apiPost("members", "upsert", payload);
+  if (r.ok) toast("บันทึกสำเร็จ ✅ (row " + r.row + ")", true);
+  else toast("บันทึกไม่สำเร็จ: " + (r.error || "unknown"), false);
+}
+</script>
+</body>
+</html>
