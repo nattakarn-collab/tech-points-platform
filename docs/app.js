@@ -49,24 +49,30 @@ async function onRegister(profile) {
   try {
     UI.bindTabs();
 
-    // เปิดแท็บจาก URL (?tab=...)
     const tab = UI.getTabFromUrl();
     UI.setActiveTab(tab);
 
-    // init LIFF (จะ login / ดึง profile)
-    UI.setStatus("Initializing LIFF...");
-    const profile = await LiffAuth.init();
+    const u = new URL(location.href);
+    const noliff = u.searchParams.get("noliff") === "1";
 
-    // ถ้ากำลัง redirect ไป login -> profile จะเป็น null
-    if (!profile) return;
+    let profile = null;
 
-    UI.renderProfile(profile);
-    UI.setStatus("Ready ✅");
+    if (noliff) {
+      // โหมดทดสอบบนเว็บ: ไม่เรียก LIFF
+      UI.setStatus("NO-LIFF mode (test) ✅");
+      profile = { userId: "U_WEB_TEST", displayName: "Web Test", pictureUrl: "" };
+      UI.renderProfile(profile);
+    } else {
+      UI.setStatus("Initializing LIFF...");
+      profile = await LiffAuth.init();
+      if (!profile) return;
+      UI.renderProfile(profile);
+      UI.setStatus("Ready ✅");
+    }
 
-    // bind ปุ่มต่าง ๆ
     UI.$("btnRegister")?.addEventListener("click", () => onRegister(profile));
 
-    // (ถ้าคุณมีฟังก์ชันอื่น เช่น onInstall/onPoints/onRedeem ให้ bind เพิ่มตรงนี้)
+    // ถ้าคุณทำ onInstall/onPoints/onRedeem แล้วค่อย bind เพิ่ม
     // UI.$("btnInstall")?.addEventListener("click", () => onInstall(profile));
     // UI.$("btnPoints")?.addEventListener("click", () => onPoints(profile));
     // UI.$("btnRedeem")?.addEventListener("click", () => onRedeem(profile));
