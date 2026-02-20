@@ -1,7 +1,8 @@
+// docs/api.js
 window.Api = (function () {
   async function post(payload) {
     const url = window.APP_CONFIG?.APPS_SCRIPT_URL;
-    if (!url) throw new Error("Missing APPS_SCRIPT_URL");
+    if (!url) throw new Error("APPS_SCRIPT_URL is missing in config.js");
 
     const res = await fetch(url, {
       method: "POST",
@@ -9,8 +10,13 @@ window.Api = (function () {
       body: JSON.stringify(payload),
     });
 
-    const text = await res.text(); // เผื่อไม่ใช่ JSON จะได้เห็นข้อความ
-    try { return JSON.parse(text); } catch { return { ok:false, raw:text }; }
+    // Apps Script จะตอบเป็น JSON string
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = { ok:false, raw:text }; }
+
+    return data;
   }
+
   return { post };
 })();
