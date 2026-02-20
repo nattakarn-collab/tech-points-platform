@@ -9,7 +9,7 @@
 <body>
 <div class="wrap">
   <div class="brand">
-    <img src="Logo-Macaw-สีดำ1.png" alt="logo">
+    <img src="Logo-Macaw-สีดำ1.png" alt="logo" onerror="this.style.display='none'">
     <div>
       <div class="title">แลกแต้ม</div>
       <div class="badge">Redeems</div>
@@ -37,6 +37,7 @@
   </div>
 </div>
 
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script src="liff-starter.js"></script>
 <script>
 async function submitRedeem(){
@@ -46,13 +47,9 @@ async function submitRedeem(){
   const pts = Number(document.getElementById("points").value || 0);
   if (!Number.isFinite(pts) || pts <= 0) return toast("กรอกแต้มให้ถูกต้อง", false);
 
-  const payload = {
-    userId: p.userId,
-    btu: document.getElementById("btu").value,
-    points: pts
-  };
-
+  const payload = { userId: p.userId, btu: document.getElementById("btu").value, points: pts };
   const r = await apiPost("redeems", "create", payload);
+
   if (r.ok) toast(`แลกสำเร็จ ✅ คงเหลือ ${r.balanceAfter}`, true);
   else toast("แลกไม่สำเร็จ: " + (r.error || "unknown"), false);
 }
