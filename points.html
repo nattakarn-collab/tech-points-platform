@@ -1,1 +1,53 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Points</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <img src="Logo-Macaw-สีดำ1.png" alt="logo" onerror="this.style.display='none'">
+    <div>
+      <div class="title">เช็คแต้ม</div>
+      <div class="badge">Points</div>
+    </div>
+  </div>
 
+  <div class="card">
+    <div class="mini">UserId: <span id="userId">-</span></div>
+    <div class="hr"></div>
+
+    <button class="btn primary" onclick="loadBalance()">โหลดแต้มล่าสุด</button>
+
+    <div class="hr"></div>
+    <div class="mini">Plus: <span id="plus">-</span></div>
+    <div class="mini">Minus: <span id="minus">-</span></div>
+    <div class="mini">Balance: <b id="balance">-</b></div>
+
+    <div class="hr"></div>
+    <button class="btn" onclick="location.href='index.html'">กลับเมนู</button>
+    <div id="toast" class="mini"></div>
+  </div>
+</div>
+
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script src="liff-starter.js"></script>
+<script>
+async function loadBalance(){
+  const p = window.__LIFF_PROFILE__;
+  if (!p) return toast("ยังไม่พร้อมใช้งาน LIFF", false);
+
+  const r = await apiPost("points", "balance", { userId: p.userId });
+  if (!r.ok) return toast("โหลดไม่สำเร็จ: " + (r.error||"unknown"), false);
+
+  document.getElementById("plus").textContent = r.plus;
+  document.getElementById("minus").textContent = r.minus;
+  document.getElementById("balance").textContent = r.balance;
+  toast("อัปเดตล่าสุด ✅", true);
+}
+</script>
+</body>
+</html>
