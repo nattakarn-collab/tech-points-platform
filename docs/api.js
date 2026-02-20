@@ -9,8 +9,8 @@ window.Api = (function () {
       body: JSON.stringify(payload),
     });
 
-    return await res.json();
+    const text = await res.text(); // เผื่อไม่ใช่ JSON จะได้เห็นข้อความ
+    try { return JSON.parse(text); } catch { return { ok:false, raw:text }; }
   }
-
   return { post };
 })();
