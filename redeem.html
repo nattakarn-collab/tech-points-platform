@@ -1,1 +1,61 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Redeem</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <img src="Logo-Macaw-สีดำ1.png" alt="logo">
+    <div>
+      <div class="title">แลกแต้ม</div>
+      <div class="badge">Redeems</div>
+    </div>
+  </div>
 
+  <div class="card">
+    <div class="mini">UserId: <span id="userId">-</span></div>
+
+    <label>BTU</label>
+    <select id="btu">
+      <option value="">เลือก</option>
+      <option>09-12</option>
+      <option>18-24</option>
+    </select>
+
+    <label>จำนวนแต้มที่ต้องการใช้</label>
+    <input id="points" type="number" min="1" step="1" placeholder="เช่น 10">
+
+    <div class="hr"></div>
+    <button class="btn danger" onclick="submitRedeem()">ยืนยันแลกแต้ม</button>
+    <div style="height:10px"></div>
+    <button class="btn" onclick="location.href='index.html'">กลับเมนู</button>
+    <div id="toast" class="mini"></div>
+  </div>
+</div>
+
+<script src="liff-starter.js"></script>
+<script>
+async function submitRedeem(){
+  const p = window.__LIFF_PROFILE__;
+  if (!p) return toast("ยังไม่พร้อมใช้งาน LIFF", false);
+
+  const pts = Number(document.getElementById("points").value || 0);
+  if (!Number.isFinite(pts) || pts <= 0) return toast("กรอกแต้มให้ถูกต้อง", false);
+
+  const payload = {
+    userId: p.userId,
+    btu: document.getElementById("btu").value,
+    points: pts
+  };
+
+  const r = await apiPost("redeems", "create", payload);
+  if (r.ok) toast(`แลกสำเร็จ ✅ คงเหลือ ${r.balanceAfter}`, true);
+  else toast("แลกไม่สำเร็จ: " + (r.error || "unknown"), false);
+}
+</script>
+</body>
+</html>
